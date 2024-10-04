@@ -1,0 +1,43 @@
+import java.util.Scanner;
+
+public class AlgoritmoLinealSimulacion {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Solicitar los valores de a, c y m al usuario
+        System.out.print("Introduce el valor de 'a' (multiplicador): ");
+        long a = scanner.nextLong();
+        System.out.print("Introduce el valor de 'c' (incremento): ");
+        long c = scanner.nextLong();
+        System.out.print("Introduce el valor de 'm' (módulo): ");
+        long m = scanner.nextLong();
+
+        // Solicitar el valor inicial de 'x' al usuario
+        System.out.print("Introduce el valor inicial de 'x' (semilla): ");
+        long x = scanner.nextLong();
+
+        // Solicitar el número de iteraciones al usuario
+        System.out.print("Introduce el número de iteraciones: ");
+        int iteraciones = scanner.nextInt();
+
+        // Encabezado de la tabla
+        System.out.printf("|%3s|%3s|%3s|%10s|%4s|%4s|%7s|\n", "a", "x", "c", "Resultado", "MOD", "M-1", "Ri");
+        System.out.println("--------------------------------------------------------");
+
+        // Ejecutar el algoritmo lineal
+        for (int i = 0; i < iteraciones; i++) {
+            long resultado = (a * x + c);  // Calcular el resultado sin aplicar el módulo
+            long mod = resultado % m;      // Aplicar el módulo
+            double ri = (double) mod / (m - 1);  // Calcular Ri como mod/(M-1)
+
+            // Mostrar los resultados en formato de tabla
+            System.out.printf("|%3d|%3d|%3d|%10d|%4d|%4d|%7.4f|\n", a, x, c, resultado, mod, m - 1, ri);
+
+            // Actualizar x para la siguiente iteración
+            x = mod;
+        }
+
+        scanner.close();
+    }
+}
