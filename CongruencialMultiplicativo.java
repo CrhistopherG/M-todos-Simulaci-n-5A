@@ -1,7 +1,18 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
+import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +21,7 @@ public class CongruencialMultiplicativo extends JFrame {
     public CongruencialMultiplicativo() {
         setTitle("Congruencial Multiplicativo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(500, 500);
+        setSize(500, 510);
         setResizable(true);
         setLocationRelativeTo(null);
 
@@ -25,7 +36,7 @@ public class CongruencialMultiplicativo extends JFrame {
         panelTexto.add(labelTexto);
 
         JPanel datos = new JPanel();
-        datos.setLayout(new GridLayout(5, 2, 10, 10));
+        datos.setLayout(new GridLayout(6, 2, 10, 10));
 
         JLabel valor_Inicial = new JLabel("Valor inicial (X0)", SwingConstants.LEFT);
         JTextField contenido_inicial = new JTextField(10);
@@ -44,8 +55,8 @@ public class CongruencialMultiplicativo extends JFrame {
 
         JButton boton_generar = new JButton("Generar números");
         JButton boton_regresar = new JButton("Regresar");
-        datos.add(boton_regresar);
         datos.add(boton_generar);
+        datos.add(boton_regresar);
 
         JPanel panelTabla = new JPanel();
         DefaultTableModel modelotabla = new DefaultTableModel(new Object[]{"n", "Xn", "Resultado", "No. Pseudoaleatorio"}, 0);
@@ -88,9 +99,7 @@ public class CongruencialMultiplicativo extends JFrame {
 
                 // Calcular m y a
                 int m = (int) Math.pow(2, g);
-                System.out.println(m);
                 int a = (5 + 8 * k); // Usar la fórmula adecuada
-                System.out.println(a);
                 modelotabla.setRowCount(0);
 
                 List<Object[]> resultados = generarNumeros(X0, a, m);
@@ -102,11 +111,24 @@ public class CongruencialMultiplicativo extends JFrame {
                 JOptionPane.showMessageDialog(null, "Por favor, introduce valores válidos.");
             }
         });
+        JPanel panelPDF = new JPanel();
+        JButton boton_guardarPDF = new JButton("Guardar en PDF");
+        panelPDF.add(boton_guardarPDF);
 
+        // Agregar el ActionListener al botón
+        boton_guardarPDF.addActionListener(e -> {
+        try {
+            seleccionarYGuardarPDF(modelotabla);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error al guardar el archivo PDF: " + ex.getMessage());
+        }
+        });
+
+        CM.add(panelPDF);
         add(CM);
         setVisible(true);
     }
-
     private List<Object[]> generarNumeros(int X0, int a, int m) {
         List<Object[]> datos = new ArrayList<>();
         int xn = X0;
@@ -122,8 +144,38 @@ public class CongruencialMultiplicativo extends JFrame {
 
         return datos;
     }
-
-    public static void main(String[] args) {
-        new CongruencialMultiplicativo();
+    private void seleccionarYGuardarPDF(DefaultTableModel modelotabla) throws Exception {
+        // Crear un cuadro de diálogo para seleccionar el archivo
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Guardar como PDF");
+        fileChooser.setSelectedFile(new File("NumerosPseudoaleatorios.pdf"));
+        int userSelection = fileChooser.showSaveDialog(this);
+    
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File archivoPDF = fileChooser.getSelectedFile();
+    
+            // Crear el PDF
+            Document document = new Document();
+            PdfWriter.getInstance(document, new FileOutputStream(archivoPDF));
+    
+            document.open();
+            PdfPTable pdfTable = new PdfPTable(4); // Cuatro columnas para los datos de la tabla
+            pdfTable.addCell("n");
+            pdfTable.addCell("Xn");
+            pdfTable.addCell("Resultado");
+            pdfTable.addCell("No. Pseudoaleatorio");
+    
+            // Llenar la tabla PDF con los datos de la JTable
+            for (int i = 0; i < modelotabla.getRowCount(); i++) {
+                for (int j = 0; j < modelotabla.getColumnCount(); j++) {
+                    pdfTable.addCell(modelotabla.getValueAt(i, j).toString());
+                }
+            }
+    
+            document.add(pdfTable);
+            document.close();
+    
+            JOptionPane.showMessageDialog(null, "Archivo PDF guardado en: " + archivoPDF.getAbsolutePath());
+        }
     }
 }
