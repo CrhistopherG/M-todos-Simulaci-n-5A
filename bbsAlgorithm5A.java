@@ -1,5 +1,6 @@
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -17,6 +18,9 @@ import java.awt.GridLayout;
 import java.awt.ScrollPane;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class bbsAlgorithm5A extends JFrame{
@@ -124,14 +128,14 @@ public class bbsAlgorithm5A extends JFrame{
     };
 
     ActionListener act_listener = new ActionListener() {
-
         @Override
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == gen_button && parameters_valid) {
                 generate();
+            } else if (e.getSource() == export_button && !numbers.isEmpty()) {
+                export();
             }
         }
-        
     };
 
     bbsAlgorithm5A() {
@@ -151,12 +155,12 @@ public class bbsAlgorithm5A extends JFrame{
         input_panel.add(seed_input);
 
         input_panel.add(new JLabel("valor p"));
-        p_input.setToolTipText("p debe ser primo y positivo");
+        p_input.setToolTipText("p debe ser primo, positivo y su modulo 4 (p % 4) igual a 3");
         p_input.getDocument().addDocumentListener(doc_Listener);
         input_panel.add(p_input);
 
         input_panel.add(new JLabel("valor q"));
-        q_input.setToolTipText("q debe ser primo y positivo");
+        q_input.setToolTipText("q debe ser primo, positivo y su modulo 4 (p % 4) igual a 3");
         q_input.getDocument().addDocumentListener(doc_Listener);
         input_panel.add(q_input);
 
@@ -172,6 +176,7 @@ public class bbsAlgorithm5A extends JFrame{
         gen_button.addActionListener(act_listener);
         input_panel.add(gen_button);
 
+        export_button.addActionListener(act_listener);
         input_panel.add(export_button);
 
         panel.add(input_panel, BorderLayout.WEST);
@@ -191,6 +196,7 @@ public class bbsAlgorithm5A extends JFrame{
 
     public void generate() {
         table_model.setRowCount(1);
+        numbers.clear();
         double r = -1;
         long xi = seed, xi2 = -1, modM = -1;
         if (iterations == 0) {
@@ -205,24 +211,40 @@ public class bbsAlgorithm5A extends JFrame{
             String.valueOf(modM), 
             String.valueOf(r)
         });
+        numbers.add(r);
         xi = modM;
         true_seed = (int)modM;
         while (iterations != 0) {
-            System.out.println(xi);
             xi2 = xi*xi;
             modM = xi2 % m;
             r = (double)modM / (double)(m - 1);
+            xi = modM;
+            if (xi == true_seed && iterations < 0) {
+                break;
+            }
             table_model.addRow(new String[]{
                 String.valueOf(xi), 
                 String.valueOf(xi2), 
                 String.valueOf(modM), 
                 String.valueOf(r)
             });
-            xi = modM;
+            numbers.add(r);
             iterations--;
-            if (xi == true_seed && iterations < 0) {
-                break;
-            }            
+        }
+    }
+
+    public void export() {
+        JFileChooser fileChooser = new JFileChooser("/");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setSelectedFile(new File(String.format("BBS_Numbers(%d).txt", true_seed)));
+        fileChooser.showSaveDialog(this);
+        File f = fileChooser.getSelectedFile();
+        try (FileWriter fw = new FileWriter(f)) {
+            for (Double d : numbers) {
+                fw.append(d.toString() + "\n");
+            }
+        } catch (IOException e) {
+            System.out.println("Error al guardar");
         }
     }
 
