@@ -2,10 +2,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.HashSet;
+import javax.swing.table.DefaultTableModel;
 
 public class AlgoritmoLinealSimulacionGUI extends JFrame {
 
     private JTextField campoX, campoK, campoG, campoIteraciones;
+    private JTable tablaResultados;  // Usar JTable para mostrar resultados
+    private DefaultTableModel modeloTabla;  // Modelo de tabla para agregar filas dinámicamente
 
     public AlgoritmoLinealSimulacionGUI() {
         setTitle("Simulación de Algoritmo Lineal");
@@ -37,7 +45,7 @@ public class AlgoritmoLinealSimulacionGUI extends JFrame {
         panelEntradas.add(campoK);
         panelEntradas.add(new JLabel("Valor de 'g':"));
         panelEntradas.add(campoG);
-        panelEntradas.add(new JLabel("Número de iteraciones:"));
+        panelEntradas.add(new JLabel("Número de iteraciones (opcional):"));
         panelEntradas.add(campoIteraciones);
         panelEntradas.add(botonCalcular);
 
@@ -50,71 +58,75 @@ public class AlgoritmoLinealSimulacionGUI extends JFrame {
             long x = Long.parseLong(campoX.getText());
             long k = Long.parseLong(campoK.getText());
             long g = Long.parseLong(campoG.getText());
-            int iteraciones = Integer.parseInt(campoIteraciones.getText());
 
             // Calcular los valores de a y m
             long a = 1 + 4 * k;  // Fórmula para a
             long m = (long) Math.pow(2, g);  // m = 2^g
             long c = findLargestPrimeLessThan(m); // Encontrar el número primo más grande menor que m
 
+            // Determinar el número de iteraciones
+            boolean usarIteracionesUsuario = !campoIteraciones.getText().isEmpty();
+            int iteraciones = 0;
+            if (usarIteracionesUsuario) {
+                iteraciones = Integer.parseInt(campoIteraciones.getText());
+            }
+
             // Crear una nueva ventana para mostrar los resultados
             JFrame ventanaResultados = new JFrame("Resultados de la Simulación");
             ventanaResultados.setSize(700, 500); // Aumentar tamaño de la ventana de resultados
             ventanaResultados.setLocationRelativeTo(null); // Centrar la ventana
 
-            // Crear un panel para mostrar los valores calculados como botones
-            JPanel panelValores = new JPanel();
-            panelValores.setLayout(new FlowLayout());
-            panelValores.setBorder(BorderFactory.createTitledBorder("Valores Calculados"));
-
-            JButton botonA = new JButton("a (multiplicador) = " + a);
-            JButton botonC = new JButton("c (incremento) = " + c);
-            JButton botonM = new JButton("m (módulo) = " + m);
-
-            // Añadir los botones al panel
-            panelValores.add(botonA);
-            panelValores.add(botonC);
-            panelValores.add(botonM);
-
-            // Crear un panel para la tabla
-            JPanel panelTabla = new JPanel();
-            panelTabla.setLayout(new GridLayout(iteraciones + 1, 7)); // 7 columnas (a, x, c, Resultado, MOD, M-1, Ri)
-
-            // Encabezado de la tabla
-            panelTabla.add(new JButton("a"));
-            panelTabla.add(new JButton("x"));
-            panelTabla.add(new JButton("c"));
-            panelTabla.add(new JButton("Resultado"));
-            panelTabla.add(new JButton("MOD"));
-            panelTabla.add(new JButton("M-1"));
-            panelTabla.add(new JButton("Ri"));
+            // Crear un modelo de tabla para almacenar los datos de la simulación
+            String[] columnas = {"a", "x", "c", "Resultado", "MOD", "M-1", "Ri"};
+            modeloTabla = new DefaultTableModel(columnas, 0);  // Modelo de tabla vacío
+            tablaResultados = new JTable(modeloTabla);  // Crear JTable con el modelo
 
             // Ejecutar el algoritmo lineal
-            for (int i = 0; i < iteraciones; i++) {
+            HashSet<Long> valoresX = new HashSet<>(); // Para detectar repeticiones de x
+            int i = 0;
+            boolean repetirDetectado = false;
+
+            while (usarIteracionesUsuario ? i < iteraciones : !repetirDetectado) {
+                if (valoresX.contains(x)) {
+                    repetirDetectado = true;  // Se ha detectado una repetición de x
+                }
+
+                valoresX.add(x);
                 long resultado = (a * x + c);  // Calcular el resultado sin aplicar el módulo
                 long mod = resultado % m;      // Aplicar el módulo
                 double ri = (double) mod / (m - 1);  // Calcular Ri como mod/(M-1)
 
-                // Agregar los resultados en formato de tabla como botones
-                panelTabla.add(new JButton(String.valueOf(a)));
-                panelTabla.add(new JButton(String.valueOf(x)));
-                panelTabla.add(new JButton(String.valueOf(c)));
-                panelTabla.add(new JButton(String.valueOf(resultado)));
-                panelTabla.add(new JButton(String.valueOf(mod)));
-                panelTabla.add(new JButton(String.valueOf(m - 1)));
-                panelTabla.add(new JButton(String.format("%.4f", ri)));
+                // Agregar una fila con los resultados al modelo de la tabla
+                modeloTabla.addRow(new Object[]{a, x, c, resultado, mod, (m - 1), String.format("%.4f", ri)});
 
                 // Actualizar x para la siguiente iteración
                 x = mod;
+                i++;
+
+                // Si se detecta una repetición, ejecutar una iteración más
+                if (repetirDetectado) {
+                    break;
+                }
             }
 
-            // Panel para la tabla
-            panelTabla.setBorder(BorderFactory.createEtchedBorder()); // Borde 3D
-            
+            // Agregar la tabla a un panel con scroll
+            JScrollPane scrollTabla = new JScrollPane(tablaResultados);
+
+            // Botón para exportar a TXT
+            JButton botonExportarTXT = new JButton("Exportar a TXT");
+            botonExportarTXT.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    exportarTXT();
+                }
+            });
+
             // Agregar paneles al marco de resultados
             ventanaResultados.setLayout(new BorderLayout());
-            ventanaResultados.add(panelValores, BorderLayout.NORTH);
-            ventanaResultados.add(panelTabla, BorderLayout.CENTER);
+            ventanaResultados.add(scrollTabla, BorderLayout.CENTER);
+            JPanel panelBotones = new JPanel();
+            panelBotones.add(botonExportarTXT); // Agregar botón de exportación TXT
+            ventanaResultados.add(panelBotones, BorderLayout.SOUTH); // Botón de exportación
 
             ventanaResultados.setVisible(true); // Hacer visible la ventana de resultados
 
@@ -123,28 +135,57 @@ public class AlgoritmoLinealSimulacionGUI extends JFrame {
         }
     }
 
-    // Función para verificar si un número es primo
-    public static boolean isPrime(long num) {
-        if (num <= 1) return false;
-        if (num == 2) return true;
-        if (num % 2 == 0) return false;
-        for (long i = 3; i * i <= num; i += 2) {
+    // Función para exportar los datos a un archivo TXT con mejor estructura
+    private void exportarTXT() {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("simulacion_resultados.txt"), "UTF-8"))) {
+            // Formato fijo para cada columna (ajusta según los valores típicos)
+            String formatoEncabezados = "%-10s %-10s %-10s %-15s %-10s %-10s %-10s";
+            String formatoFila = "%-10d %-10d %-10d %-15d %-10d %-10d %-10s";
+
+            // Escribir encabezados de la tabla con formato fijo
+            writer.write(String.format(formatoEncabezados, "a", "x", "c", "Resultado", "MOD", "M-1", "Ri"));
+            writer.newLine(); // Nueva línea después de los encabezados
+
+            // Escribir los datos de la tabla con formato fijo
+            for (int i = 0; i < tablaResultados.getRowCount(); i++) {
+                writer.write(String.format(formatoFila,
+                    Long.parseLong(tablaResultados.getValueAt(i, 0).toString()),  // a
+                    Long.parseLong(tablaResultados.getValueAt(i, 1).toString()),  // x
+                    Long.parseLong(tablaResultados.getValueAt(i, 2).toString()),  // c
+                    Long.parseLong(tablaResultados.getValueAt(i, 3).toString()),  // Resultado
+                    Long.parseLong(tablaResultados.getValueAt(i, 4).toString()),  // MOD
+                    Long.parseLong(tablaResultados.getValueAt(i, 5).toString()),  // M-1
+                    tablaResultados.getValueAt(i, 6).toString()                 // Ri
+                ));
+                writer.newLine(); // Nueva línea después de cada fila
+            }
+
+            JOptionPane.showMessageDialog(this, "Los resultados se han exportado a 'simulacion_resultados.txt'.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al exportar a TXT.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private long findLargestPrimeLessThan(long n) {
+        for (long i = n - 1; i >= 2; i--) {
+            if (isPrime(i)) {
+                return i;
+            }
+        }
+        return 2; // Si no se encuentra, retornar el menor primo
+    }
+
+    private boolean isPrime(long num) {
+        if (num < 2) return false;
+        for (long i = 2; i <= Math.sqrt(num); i++) {
             if (num % i == 0) return false;
         }
         return true;
     }
 
-    // Función para encontrar el mayor número primo menor que m
-    public static long findLargestPrimeLessThan(long m) {
-        for (long i = m - 1; i > 1; i--) {
-            if (isPrime(i)) {
-                return i;
-            }
-        }
-        return 2; // Si no se encuentra ningún primo menor, devolver 2 como último recurso
-    }
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(AlgoritmoLinealSimulacionGUI::new); // Crear la ventana en el hilo de despacho de eventos
+        SwingUtilities.invokeLater(() -> new AlgoritmoLinealSimulacionGUI());
     }
 }
