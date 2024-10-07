@@ -1,8 +1,14 @@
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.event.*;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
 
 public class tema3 extends JFrame implements ActionListener {
 
@@ -15,6 +21,7 @@ public class tema3 extends JFrame implements ActionListener {
     DefaultTableModel model;
     JLabel interaccion;
     JTextField datos_inte;
+    JButton exportar;
 
     public tema3() {
         setLayout(null);
@@ -22,7 +29,6 @@ public class tema3 extends JFrame implements ActionListener {
         // Diseño de componentes
         semilla = new JLabel("Semilla Inicial: ");
         semilla.setFont(new Font("Arial", Font.PLAIN, 15));
-        semilla.setBackground(Color.BLUE);
         semilla.setBounds(70, 70, 140, 30);
         add(semilla);
 
@@ -33,7 +39,6 @@ public class tema3 extends JFrame implements ActionListener {
 
         interaccion=new JLabel("Numero: ");
         interaccion.setFont(new Font("Arial", Font.PLAIN, 15));
-        interaccion.setBackground(Color.BLUE);
         interaccion.setBounds(320, 70, 100, 30);
         add(interaccion);
 
@@ -46,7 +51,6 @@ public class tema3 extends JFrame implements ActionListener {
         constante = new JLabel("Multiplicador constante: ");
         constante.setBounds(70, 130, 170, 30);
         constante.setFont(new Font("Arial", Font.PLAIN, 15));
-        constante.setBackground(Color.BLUE);
         add(constante);
 
         datoconstante = new JTextField("");
@@ -81,6 +85,12 @@ public class tema3 extends JFrame implements ActionListener {
         JScrollPane scrollPane = new JScrollPane(resultadosTabla);
         scrollPane.setBounds(70, 240, 400, 200);
         add(scrollPane);
+
+        exportar=new JButton("Exportar");
+        exportar.setBounds(70,450,100,30);
+        exportar.setFont(new Font("Arial", Font.PLAIN, 15));
+        add(exportar);
+        exportar.addActionListener(this);
     }
 
     public void actionPerformed(ActionEvent oliver) {
@@ -100,6 +110,13 @@ public class tema3 extends JFrame implements ActionListener {
             datoconstante.setText("");
             model.setRowCount(0); // Limpiar tabla
             datos_inte.setText("");
+        }
+        else if(oliver.getSource()==exportar){
+            try {
+                seleccionarYGuardarPDF(model);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al guardar el PDF: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -138,6 +155,41 @@ public class tema3 extends JFrame implements ActionListener {
 
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Por favor, ingresa un número válido!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void seleccionarYGuardarPDF(DefaultTableModel modelotabla) throws Exception {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Guardar como PDF");
+        fileChooser.setSelectedFile(new File("Resultados.pdf"));
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File archivoPDF = fileChooser.getSelectedFile();
+
+            // Crear el PDF
+            Document document = new Document();
+            PdfWriter.getInstance(document, new FileOutputStream(archivoPDF));
+
+            document.open();
+            PdfPTable pdfTable = new PdfPTable(modelotabla.getColumnCount()); // Número de columnas
+
+            // Agregar los encabezados de la tabla
+            for (int i = 0; i < modelotabla.getColumnCount(); i++) {
+                pdfTable.addCell(modelotabla.getColumnName(i));
+            }
+
+            // Llenar la tabla PDF con los datos de la JTable
+            for (int i = 0; i < modelotabla.getRowCount(); i++) {
+                for (int j = 0; j < modelotabla.getColumnCount(); j++) {
+                    pdfTable.addCell(modelotabla.getValueAt(i, j).toString());
+                }
+            }
+
+            document.add(pdfTable);
+            document.close();
+
+            JOptionPane.showMessageDialog(null, "Archivo PDF guardado en: " + archivoPDF.getAbsolutePath());
         }
     }
 }
