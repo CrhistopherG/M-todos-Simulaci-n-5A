@@ -1,8 +1,6 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import com.itextpdf.text.Document;
@@ -11,8 +9,6 @@ import com.itextpdf.text.pdf.PdfWriter;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -129,21 +125,39 @@ public class CongruencialMultiplicativo extends JFrame {
         add(CM);
         setVisible(true);
     }
+
+
+
     private List<Object[]> generarNumeros(int X0, int a, int m) {
         List<Object[]> datos = new ArrayList<>();
+        List<Integer> valoresGenerados = new ArrayList<>();
         int xn = X0;
-
-        for (int i = 0; i < 10; i++) {
+        int contador = 1;
+    
+        while (true) {
             int resultado = (a * xn) % m;
             double noPseudoaleatorio = (double) resultado / (m - 1);
             String noPseudoaleatorioFormateado = String.format("%.5f", noPseudoaleatorio);
-
-            datos.add(new Object[]{i + 1, xn, resultado, noPseudoaleatorioFormateado});
+    
+            // Agregar la fila a la lista
+            datos.add(new Object[]{contador, xn, resultado, noPseudoaleatorioFormateado});
+    
+            // Comprobar si el valor ya se generó
+            if (valoresGenerados.contains(resultado)) {
+                // Agregar uno más antes de salir
+                datos.add(new Object[]{contador + 1, resultado, (a * resultado) % m, String.format("%.5f", (double) ((a * resultado) % m) / (m - 1))});
+                break;
+            }
+    
+            // Guardar el valor generado
+            valoresGenerados.add(resultado);
             xn = resultado;
+            contador++;
         }
-
+    
         return datos;
     }
+    
     private void seleccionarYGuardarPDF(DefaultTableModel modelotabla) throws Exception {
         // Crear un cuadro de diálogo para seleccionar el archivo
         JFileChooser fileChooser = new JFileChooser();
@@ -178,4 +192,9 @@ public class CongruencialMultiplicativo extends JFrame {
             JOptionPane.showMessageDialog(null, "Archivo PDF guardado en: " + archivoPDF.getAbsolutePath());
         }
     }
+    
+    
+    
+
+
 }
