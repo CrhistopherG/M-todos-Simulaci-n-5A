@@ -43,6 +43,7 @@ public class bbsAlgorithm5A extends JFrame{
 
     JButton gen_button = new JButton("generar");
     JButton export_button = new JButton("exportar");
+    JButton back_button = new JButton("regresar");
 
     JTable table = new JTable();
     DefaultTableModel table_model = ((DefaultTableModel)table.getModel());
@@ -134,6 +135,8 @@ public class bbsAlgorithm5A extends JFrame{
                 generate();
             } else if (e.getSource() == export_button && !numbers.isEmpty()) {
                 export();
+            } else if (e.getSource() == back_button) {
+                //REGRESAR AL MENÚ
             }
         }
     };
@@ -179,6 +182,9 @@ public class bbsAlgorithm5A extends JFrame{
         export_button.addActionListener(act_listener);
         input_panel.add(export_button);
 
+        back_button.addActionListener(act_listener);
+        input_panel.add(back_button);
+
         panel.add(input_panel, BorderLayout.WEST);
 
         ScrollPane table_panel = new ScrollPane();
@@ -202,24 +208,27 @@ public class bbsAlgorithm5A extends JFrame{
         if (iterations == 0) {
             iterations--;
         }
-        xi2 = xi*xi;
-        modM = xi2 % m;
-        r = (double)modM / (double)(m - 1);
-        table_model.addRow(new String[]{
-            String.valueOf(xi), 
-            String.valueOf(xi2), 
-            String.valueOf(modM), 
-            String.valueOf(r)
-        });
-        numbers.add(r);
-        xi = modM;
-        true_seed = (int)modM;
+        for (int i = 0; i < 2; i++) {
+            xi2 = xi*xi;
+            modM = xi2 % m;
+            r = (double)modM / (double)(m - 1);
+            table_model.addRow(new String[]{
+                String.valueOf(xi), 
+                String.valueOf(xi2), 
+                String.valueOf(modM), 
+                String.valueOf(r)
+            });
+            xi = modM;
+            numbers.add(r);
+            if (i == 0) {
+                true_seed = (int)modM;
+            }
+        }
         while (iterations != 0) {
             xi2 = xi*xi;
             modM = xi2 % m;
             r = (double)modM / (double)(m - 1);
-            xi = modM;
-            if (xi == true_seed && iterations < 0) {
+            if ((xi == true_seed || xi == seed) && iterations < 0) {
                 break;
             }
             table_model.addRow(new String[]{
@@ -228,6 +237,7 @@ public class bbsAlgorithm5A extends JFrame{
                 String.valueOf(modM), 
                 String.valueOf(r)
             });
+            xi = modM;
             numbers.add(r);
             iterations--;
         }
