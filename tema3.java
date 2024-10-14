@@ -22,6 +22,7 @@ public class tema3 extends JFrame implements ActionListener {
     JLabel interaccion;
     JTextField datos_inte;
     JButton exportar;
+    private int totalGenerados = 0; // Contador total de números generados
 
     public tema3() {
         setLayout(null);
@@ -96,7 +97,7 @@ public class tema3 extends JFrame implements ActionListener {
         if (oliver.getSource() == regresar) {
             MenuSimulacion2 ventana = new MenuSimulacion2();
             ventana.setTitle("Simulacion");
-            ventana.setBounds(0, 0, 550, 450);
+            ventana.setBounds(0, 0, 550, 480);
             ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             ventana.setVisible(true);
             ventana.setResizable(false);
@@ -105,10 +106,14 @@ public class tema3 extends JFrame implements ActionListener {
         } else if (oliver.getSource() == generar) {
             generarNumeros();
         } else if (oliver.getSource() == limpiar) {
+            // Limpiar campos de texto
             datosemilla.setText("");
             datoconstante.setText("");
-            model.setRowCount(0); // Limpiar tabla
             datos_inte.setText("");
+            // Limpiar la tabla
+            model.setRowCount(0);
+            // Reiniciar contador de generados
+            totalGenerados = 0; // Reiniciar el contador total
         } else if (oliver.getSource() == exportar) {
             try {
                 seleccionarYGuardarPDF(model);
@@ -120,50 +125,53 @@ public class tema3 extends JFrame implements ActionListener {
 
     public void generarNumeros() {
         try {
-
-            //empezamos a ver si los digitos pasan a 3 y entonces ci cumle la condicionq que pase al if
             String semilla = datosemilla.getText();
-            String inte = datos_inte.getText();
             String constante = datoconstante.getText();
-            if (semilla.length() >= 3) {
-                if (constante.length() >= 3) {
 
-                    int total;
-                    int semillaInicial = Integer.parseInt(semilla);
-                    int constanteMultiplicadora = Integer.parseInt(constante);
-                    int interracion1 = Integer.parseInt(inte);
+            // Verificar que la semilla y la constante sean válidas
+            if (semilla.length() >= 3 && constante.length() >= 3) {
+                int semillaInicial = Integer.parseInt(semilla);
+                int constanteMultiplicadora = Integer.parseInt(constante);
+                int interracion1;
 
-                    for (int i = 0; i < interracion1; i++) { // Generamos 10 resultados
-                        total = semillaInicial * constanteMultiplicadora;
-
-                        String totalStr = String.valueOf(total);
-
-                        // Extraemos los 4 dígitos
-                        String cuatroDigitos;
-                        if (totalStr.length() > 4) {
-                            int start = (totalStr.length() - 4) / 2;
-                            cuatroDigitos = totalStr.substring(start, start + 4);
-                        } else {
-                            cuatroDigitos = totalStr;
-                        }
-
-                        double resultadoFinal = Integer.parseInt(cuatroDigitos) / 10000.0;
-                        double ri = resultadoFinal; // Aquí puedes agregar lógica si necesitas calcular algo diferente
-
-                        // Agregar fila a la tabla
-                        model.addRow(new Object[]{i + 1, constanteMultiplicadora, semillaInicial, resultadoFinal, cuatroDigitos, ri});
-
-                        // Actualizar la semilla para la próxima iteración
-                        semillaInicial = Integer.parseInt(cuatroDigitos);
-                    }
+                // Si se ingresa "0" en interacciones, establecer 1000 como el número de iteraciones
+                if (datos_inte.getText().equals("0")) {
+                    interracion1 = 1000;
                 } else {
-                    JOptionPane.showMessageDialog(this, "ingresa tus datos correctos que sean mayr de 3 digitos y sin letras ");
-
+                    interracion1 = Integer.parseInt(datos_inte.getText());
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "ingresa tus datos correctos que sean maypr de 3 digitos ");
-            }
 
+                // Generar dígitos
+                for (int i = 0; i < interracion1; i++) {
+                    int total = semillaInicial * constanteMultiplicadora;
+                    String totalStr = String.valueOf(total);
+
+                    // Extraemos los 4 dígitos
+                    String cuatroDigitos;
+                    if (totalStr.length() > 4) {
+                        int start = (totalStr.length() - 4) / 2;
+                        cuatroDigitos = totalStr.substring(start, start + 4);
+                    } else {
+                        cuatroDigitos = totalStr;
+                    }
+
+                    double resultadoFinal = Integer.parseInt(cuatroDigitos) / 10000.0;
+                    double ri = resultadoFinal; // Aquí puedes agregar lógica si necesitas calcular algo diferente
+
+                    // Agregar fila a la tabla
+                    model.addRow(new Object[]{totalGenerados + 1, constanteMultiplicadora, semillaInicial, resultadoFinal, cuatroDigitos, ri});
+
+                    // Actualizar la semilla para la próxima iteración
+                    semillaInicial = Integer.parseInt(cuatroDigitos);
+                    totalGenerados++; // Incrementar el contador total
+                }
+
+                // Actualizar la semilla en el campo de texto (si deseas mostrar el nuevo valor)
+                datosemilla.setText(String.valueOf(semillaInicial));
+
+            } else {
+                JOptionPane.showMessageDialog(this, "Ingresa tus datos correctos que sean mayores de 3 dígitos.");
+            }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Por favor, ingresa un número válido!", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -204,3 +212,4 @@ public class tema3 extends JFrame implements ActionListener {
         }
     }
 }
+
