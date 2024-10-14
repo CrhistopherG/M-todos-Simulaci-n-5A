@@ -37,16 +37,15 @@ public class tema3 extends JFrame implements ActionListener {
         datosemilla.setFont(new Font("Arial", Font.PLAIN, 15));
         add(datosemilla);
 
-        interaccion=new JLabel("Numero: ");
+        interaccion = new JLabel("Numero: ");
         interaccion.setFont(new Font("Arial", Font.PLAIN, 15));
         interaccion.setBounds(320, 70, 100, 30);
         add(interaccion);
 
-        datos_inte=new JTextField("");
+        datos_inte = new JTextField("");
         datos_inte.setBounds(390, 70, 80, 30);
         datos_inte.setFont(new Font("Arial", Font.PLAIN, 15));
         add(datos_inte);
-
 
         constante = new JLabel("Multiplicador constante: ");
         constante.setBounds(70, 130, 170, 30);
@@ -86,8 +85,8 @@ public class tema3 extends JFrame implements ActionListener {
         scrollPane.setBounds(70, 240, 400, 200);
         add(scrollPane);
 
-        exportar=new JButton("Exportar");
-        exportar.setBounds(70,450,100,30);
+        exportar = new JButton("Exportar");
+        exportar.setBounds(70, 450, 100, 30);
         exportar.setFont(new Font("Arial", Font.PLAIN, 15));
         add(exportar);
         exportar.addActionListener(this);
@@ -95,7 +94,7 @@ public class tema3 extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent oliver) {
         if (oliver.getSource() == regresar) {
-            MenuSimulacion ventana = new MenuSimulacion();
+            MenuSimulacion2 ventana = new MenuSimulacion2();
             ventana.setTitle("Simulacion");
             ventana.setBounds(0, 0, 550, 450);
             ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -110,8 +109,7 @@ public class tema3 extends JFrame implements ActionListener {
             datoconstante.setText("");
             model.setRowCount(0); // Limpiar tabla
             datos_inte.setText("");
-        }
-        else if(oliver.getSource()==exportar){
+        } else if (oliver.getSource() == exportar) {
             try {
                 seleccionarYGuardarPDF(model);
             } catch (Exception e) {
@@ -122,35 +120,48 @@ public class tema3 extends JFrame implements ActionListener {
 
     public void generarNumeros() {
         try {
-            int total;
-            int semillaInicial = Integer.parseInt(datosemilla.getText());
-            int constanteMultiplicadora = Integer.parseInt(datoconstante.getText());
-            int interracion1=Integer.parseInt(datos_inte.getText());
 
+            //empezamos a ver si los digitos pasan a 3 y entonces ci cumle la condicionq que pase al if
+            String semilla = datosemilla.getText();
+            String inte = datos_inte.getText();
+            String constante = datoconstante.getText();
+            if (semilla.length() >= 3) {
+                if (constante.length() >= 3) {
 
+                    int total;
+                    int semillaInicial = Integer.parseInt(semilla);
+                    int constanteMultiplicadora = Integer.parseInt(constante);
+                    int interracion1 = Integer.parseInt(inte);
 
-            for (int i = 0; i < interracion1; i++) { // Generamos 10 resultados
-                total = semillaInicial * constanteMultiplicadora;
+                    for (int i = 0; i < interracion1; i++) { // Generamos 10 resultados
+                        total = semillaInicial * constanteMultiplicadora;
 
-                String totalStr = String.valueOf(total);
+                        String totalStr = String.valueOf(total);
 
-                // Extraemos los 4 dígitos
-                String cuatroDigitos;
-                if (totalStr.length() > 4) {
-                    int start = (totalStr.length() - 4) / 2;
-                    cuatroDigitos = totalStr.substring(start, start + 4);
+                        // Extraemos los 4 dígitos
+                        String cuatroDigitos;
+                        if (totalStr.length() > 4) {
+                            int start = (totalStr.length() - 4) / 2;
+                            cuatroDigitos = totalStr.substring(start, start + 4);
+                        } else {
+                            cuatroDigitos = totalStr;
+                        }
+
+                        double resultadoFinal = Integer.parseInt(cuatroDigitos) / 10000.0;
+                        double ri = resultadoFinal; // Aquí puedes agregar lógica si necesitas calcular algo diferente
+
+                        // Agregar fila a la tabla
+                        model.addRow(new Object[]{i + 1, constanteMultiplicadora, semillaInicial, resultadoFinal, cuatroDigitos, ri});
+
+                        // Actualizar la semilla para la próxima iteración
+                        semillaInicial = Integer.parseInt(cuatroDigitos);
+                    }
                 } else {
-                    cuatroDigitos = totalStr;
+                    JOptionPane.showMessageDialog(this, "ingresa tus datos correctos que sean mayr de 3 digitos y sin letras ");
+
                 }
-
-                double resultadoFinal = Integer.parseInt(cuatroDigitos) / 10000.0;
-                double ri = resultadoFinal; // Aquí puedes agregar lógica si necesitas calcular algo diferente
-
-                // Agregar fila a la tabla
-                model.addRow(new Object[]{i + 1, constanteMultiplicadora, semillaInicial, resultadoFinal, cuatroDigitos, ri});
-
-                // Actualizar la semilla para la próxima iteración
-                semillaInicial = Integer.parseInt(cuatroDigitos);
+            } else {
+                JOptionPane.showMessageDialog(this, "ingresa tus datos correctos que sean maypr de 3 digitos ");
             }
 
         } catch (NumberFormatException e) {
